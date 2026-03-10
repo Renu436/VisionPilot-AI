@@ -8,27 +8,26 @@ except ImportError:
 
 app = FastAPI()
 
-agent = None
-
 class Task(BaseModel):
     goal: str
 
 
-def get_agent():
-    global agent
-    if agent is None:
-        agent = VisionPilotAgent()
-    return agent
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 @app.post("/run-agent")
 def run_agent(task: Task):
+    agent = VisionPilotAgent()
 
     try:
-        result = get_agent().run(task.goal)
+        result = agent.run(task.goal)
     except RuntimeError as exc:
-        return {"result": str(exc)}
+        return {"status": "error", "message": str(exc), "results": []}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    finally:
+        agent.close()
 
-    return {"result": result}
+    return result

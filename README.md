@@ -1,7 +1,7 @@
 
 # VisionPilot AI – Multi-Site Shopping Agent
 
-AI agent that uses Gemini Vision + Playwright to navigate shopping sites.
+AI agent that uses Gemini Vision + Playwright to navigate shopping sites and extract product results.
 
 ## Setup
 
@@ -40,12 +40,17 @@ streamlit run frontend/app.py
 - Walmart
 - Best Buy
 
-The agent auto-detects site intent from your goal (for example: `on flipkart`) and can also try multiple sites from environment configuration.
+The agent auto-detects site intent from your goal (for example: `on flipkart`), scans all configured sites, and ranks combined results using normalized INR price.
 
 ## Optional Environment Variables
 
 - `DEFAULT_SITE=amazon_in`
-- `TARGET_SITES=amazon_in,flipkart,ebay,walmart,bestbuy`
+- `TARGET_SITES=amazon_in,amazon_com,flipkart,ebay,walmart,bestbuy`
+- `USD_TO_INR=83.0`
+- `EUR_TO_INR=90.0`
+- `GBP_TO_INR=105.0`
+- `FX_API_URL_TEMPLATE=https://api.exchangerate.host/latest?base={base}&symbols={symbols}`
+- `FX_REFRESH_SECONDS=21600` (6-hour FX cache)
 
 ## Demo Prompts
 

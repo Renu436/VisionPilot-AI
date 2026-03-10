@@ -13,6 +13,7 @@ warnings.filterwarnings(
 from google import genai
 from PIL import Image
 import json
+import re
 try:
     from .config import GEMINI_API_KEY, GEMINI_MODEL
 except ImportError:
@@ -45,6 +46,64 @@ Example:
 }
 '''
 
+
+VALID_ACTIONS = {"click_search", "type_search", "scroll", "extract_results", "done"}
+
+
+def _extract_json_object(text):
+    value = (text or "").strip()
+    if not value:
+        return None
+
+    if value.startswith("```"):
+        lines = value.splitlines()
+        if len(lines) >= 3:
+            value = "\n".join(lines[1:-1]).strip()
+
+    try:
+        parsed = json.loads(value)
+        if isinstance(parsed, dict):
+            return parsed
+    except Exception:
+        pass
+
+    # Fallback: extract first JSON-like object from verbose model output.
+    match = re.search(r"\{[\s\S]*\}", value)
+    if not match:
+        return None
+
+    try:
+        parsed = json.loads(match.group(0))
+        if isinstance(parsed, dict):
+            return parsed
+    except Exception:
+        return None
+    return None
+
+
+def _normalize_action(parsed):
+    if not isinstance(parsed, dict):
+        return {"action": "scroll"}
+
+    action = str(parsed.get("action", "")).strip().lower()
+    synonyms = {
+        "search": "type_search",
+        "enter_search": "type_search",
+        "clicksearch": "click_search",
+        "extract": "extract_results",
+        "finish": "done",
+    }
+    action = synonyms.get(action, action)
+
+    if action not in VALID_ACTIONS:
+        action = "scroll"
+
+    result = {"action": action}
+    if action == "type_search":
+        result["text"] = str(parsed.get("text", "")).strip()
+    return result
+
+
 def analyze_screen(goal, screenshot_path, site_name=""):
     if not GEMINI_API_KEY:
         return {"action": "done", "text": "Missing GEMINI_API_KEY in environment"}
@@ -70,14 +129,9 @@ def analyze_screen(goal, screenshot_path, site_name=""):
         return {"action": "scroll"}
 
     try:
-        text = (getattr(response, "text", "") or "").strip()
-        if text.startswith("```"):
-            lines = text.splitlines()
-            if len(lines) >= 3:
-                text = "\n".join(lines[1:-1]).strip()
-        parsed = json.loads(text)
-        if isinstance(parsed, dict) and "action" in parsed:
-            return parsed
-        return {"action": "scroll"}
+        parsed = _extract_json_object(getattr(response, "text", "") or "")
+        if not parsed:
+            return {"action": "extract_results"}
+        return _normalize_action(parsed)
     except Exception:
-        return {"action": "scroll"}
+        return {"action": "extract_results"}

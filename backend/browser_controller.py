@@ -34,7 +34,7 @@ class BrowserController:
                 "Failed to launch browser. Install Chromium with: playwright install chromium "
                 "or set CHROME_EXECUTABLE_PATH to your local Chrome binary."
             ) from exc
-        self.page = self.browser.new_page()
+        self.page = self.browser.new_page(viewport={"width": 1366, "height": 900})
 
     def open_site(self, url):
         try:
@@ -44,7 +44,9 @@ class BrowserController:
 
     def screenshot(self):
         path = "screen.png"
-        self.page.screenshot(path=path, full_page=True)
+        # Viewport snapshots are more stable for action planning than giant full-page captures.
+        self.page.wait_for_timeout(400)
+        self.page.screenshot(path=path, full_page=False)
         return path
 
     def _try_click(self, selectors):
@@ -68,13 +70,17 @@ class BrowserController:
 
     def click_search(self, selectors=None):
         selectors = selectors or ["#twotabsearchtextbox", "input[type='search']", "input[name='q']"]
-        if not self._try_click(selectors):
+        success = self._try_click(selectors)
+        if not success:
             print(f"click_search failed for selectors: {selectors}")
+        return success
 
     def type_search(self, text, selectors=None):
         selectors = selectors or ["#twotabsearchtextbox", "input[type='search']", "input[name='q']"]
-        if not self._try_fill_and_submit(selectors, text):
+        success = self._try_fill_and_submit(selectors, text)
+        if not success:
             print(f"type_search failed for selectors: {selectors}")
+        return success
 
     def scroll(self):
         try:

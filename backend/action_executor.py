@@ -6,12 +6,14 @@ except ImportError:
 
 def execute_action(browser, action, site_profile=None):
     if not isinstance(action, dict):
-        return False
+        return {"finished": False, "results": []}
 
     site_profile = site_profile or {}
     search_selectors = site_profile.get("search_input_selectors")
     product_selectors = site_profile.get("product_selectors")
     title_selectors = site_profile.get("title_selectors")
+    link_selectors = site_profile.get("link_selectors")
+    price_selectors = site_profile.get("price_selectors")
 
     name = action.get("action")
 
@@ -29,11 +31,13 @@ def execute_action(browser, action, site_profile=None):
             browser.page,
             product_selectors=product_selectors,
             title_selectors=title_selectors,
+            link_selectors=link_selectors,
+            price_selectors=price_selectors,
         )
         print("Top Results:", results)
-        return len(results) > 0
+        return {"finished": len(results) > 0, "results": results}
 
     elif name == "done":
-        return True
+        return {"finished": True, "results": []}
 
-    return False
+    return {"finished": False, "results": []}
