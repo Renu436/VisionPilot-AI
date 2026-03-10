@@ -26,6 +26,8 @@ def run_agent(task: Task):
 
     try:
         result = get_agent().run(task.goal)
+    except RuntimeError as exc:
+        return {"result": str(exc)}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

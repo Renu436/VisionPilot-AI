@@ -1,7 +1,7 @@
 
-# VisionPilot AI – Hackathon Ready Project
+# VisionPilot AI – Multi-Site Shopping Agent
 
-AI agent that uses Gemini Vision + Playwright to navigate websites.
+AI agent that uses Gemini Vision + Playwright to navigate shopping sites.
 
 ## Setup
 
@@ -31,6 +31,24 @@ uvicorn backend.main:app --reload
 
 streamlit run frontend/app.py
 
-## Demo Prompt
+## Supported Shopping Sites
+
+- Amazon India
+- Amazon US
+- Flipkart
+- eBay
+- Walmart
+- Best Buy
+
+The agent auto-detects site intent from your goal (for example: `on flipkart`) and can also try multiple sites from environment configuration.
+
+## Optional Environment Variables
+
+- `DEFAULT_SITE=amazon_in`
+- `TARGET_SITES=amazon_in,flipkart,ebay,walmart,bestbuy`
+
+## Demo Prompts
 
 Search laptop under 50000
+Search gaming mouse on ebay
+Find 4k monitor on best buy
